@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4f1ea" />
+  <meta name="description" content="把答辩思路和材料整理成可编辑、可演示、可导出的网页 PPT。" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='8' width='21' height='21' fill='%23df7054'/%3E%3Crect x='35' y='8' width='21' height='21' fill='%2319313a'/%3E%3Crect x='8' y='35' width='21' height='21' fill='%237eaaa8'/%3E%3Crect x='35' y='35' width='21' height='21' fill='%23c7d3cd'/%3E%3C/svg%3E" />
+  <title>答辩工坊 · 网页 PPT 制作台</title>
+  <link rel="stylesheet" href="style.css" />
+  <style id="slideStyles">
+    .slide { --ink:#142d38; --muted:#53717a; --accent:#ee7758; --paper:#f5f2e9; --line:#b9c8c5; position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; isolation:isolate; background:var(--paper); color:var(--ink); font-family:"Microsoft YaHei","PingFang SC",sans-serif; box-shadow:0 16px 50px #213a431d; }
+    .slide::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:-1; }
+    .slide.theme-editorial::before { background:radial-gradient(circle at 83% 18%,#e8e4d8 0 14%,transparent 14.2%),linear-gradient(135deg,transparent 0 64%,#e8e4d8 64% 64.3%,transparent 64.3%); }
+    .slide.theme-ink { --ink:#252b31; --muted:#6a7073; --accent:#a54f45; --paper:#f7f5ef; --line:#aeb7b1; }
+    .slide.theme-ink::before { background:radial-gradient(ellipse at 90% 28%,#c9cfc9 0,#e5e8df 13%,transparent 33%),radial-gradient(ellipse at 76% 83%,#d6ddd7 0,transparent 39%); filter:blur(10px); }
+    .slide.theme-tech { --ink:#f4f8ff; --muted:#b5c9db; --accent:#77e8d5; --paper:#0c1c31; --line:#47647b; }
+    .slide.theme-tech::before { background:radial-gradient(circle at 78% 15%,#1a789a80,transparent 31%),linear-gradient(90deg,#77e8d510 1px,transparent 1px),linear-gradient(#77e8d510 1px,transparent 1px); background-size:auto,6% 100%,100% 12%; }
+    .slide.theme-warm { --ink:#442b2e; --muted:#795b5c; --accent:#d65b4f; --paper:#faeee1; --line:#d9bcb2; }
+    .slide.theme-warm::before { background:radial-gradient(circle at 88% 18%,#f5c8ac 0 13%,transparent 13.2%),radial-gradient(circle at 8% 99%,#f1d4c2 0 18%,transparent 18.2%); }
+    .slide-inner { position:absolute; inset:0; padding:6.5% 7.2%; display:flex; flex-direction:column; }
+    .slide-top { display:flex; justify-content:space-between; align-items:center; gap:1em; font-size:clamp(8px,1.04vw,16px); letter-spacing:.14em; font-weight:800; text-transform:uppercase; color:var(--muted); }
+    .slide-top .mark { display:inline-flex; align-items:center; gap:.6em; color:var(--accent); }
+    .slide-top .mark::before { content:""; display:block; width:1em; height:1em; border:2px solid currentColor; border-radius:50%; }
+    .slide-content { flex:1; display:flex; flex-direction:column; justify-content:center; min-height:0; }
+    .slide-kicker { color:var(--accent); font-size:clamp(9px,1.15vw,19px); letter-spacing:.19em; font-weight:800; margin:0 0 1.2em; }
+    .slide-title { font-size:clamp(24px,4.15vw,70px); letter-spacing:-.045em; line-height:1.16; max-width:84%; margin:0; font-weight:800; overflow-wrap:anywhere; }
+    .slide-cover .slide-title { font-size:clamp(28px,5.45vw,90px); max-width:75%; }
+    .slide-subtitle { font-size:clamp(11px,1.55vw,25px); color:var(--muted); max-width:75%; margin:1.3em 0 0; line-height:1.55; overflow-wrap:anywhere; }
+    .slide-bullets { display:grid; gap:clamp(7px,1.25vw,22px); margin:2.3em 0 0; padding:0; list-style:none; max-width:87%; }
+    .slide-bullets li { display:grid; grid-template-columns:1.7em 1fr; gap:.65em; align-items:start; border-top:1px solid var(--line); padding-top:.7em; font-size:clamp(11px,1.46vw,24px); line-height:1.48; overflow-wrap:anywhere; }
+    .slide-bullets li span { color:var(--accent); font-size:.8em; letter-spacing:.05em; font-weight:800; padding-top:.2em; }
+    .slide-agenda .slide-bullets { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:100%; gap:1em 2em; }
+    .slide-agenda .slide-bullets li { font-size:clamp(12px,1.8vw,27px); }
+    .slide-footer { display:flex; justify-content:space-between; align-items:end; gap:1em; font-size:clamp(8px,1.02vw,15px); color:var(--muted); letter-spacing:.06em; }
+    .slide-footer::before { content:""; position:absolute; left:7.2%; right:7.2%; bottom:11.5%; border-top:1px solid var(--line); }
+    .slide-num { font-variant-numeric:tabular-nums; font-weight:800; color:var(--accent); }
+    .slide-big-shape { position:absolute; right:-5%; bottom:-28%; width:46%; aspect-ratio:1; border:clamp(12px,2.7vw,44px) solid var(--accent); border-radius:50%; opacity:.12; pointer-events:none; }
+    .slide-qa .slide-title { max-width:100%; font-size:clamp(46px,9vw,144px); }
+    .slide-qa .slide-subtitle { margin-top:.7em; }
+    @media (max-width:760px) { .slide-inner { padding:5.5% 6%; } .slide-top { font-size:7px; } .slide-kicker { font-size:8px; margin-bottom:.45em; } .slide-title { font-size:clamp(17px,5.2vw,29px); line-height:1.12; } .slide-cover .slide-title { font-size:clamp(20px,6.4vw,35px); } .slide-subtitle { font-size:9px; margin-top:.7em; line-height:1.35; } .slide-bullets { gap:4px; margin:1em 0 0; } .slide-bullets li { font-size:9px; line-height:1.28; padding-top:.36em; gap:.35em; } .slide-agenda .slide-bullets { gap:.4em .8em; } .slide-agenda .slide-bullets li { font-size:9px; } .slide-footer { font-size:7px; } .slide-qa .slide-title { font-size:clamp(35px,10vw,60px); } }
+    @media print { @page { size:16in 9in; margin:0; } .slide { break-after:page; box-shadow:none; width:16in; height:9in; aspect-ratio:auto; } .slide:last-child { break-after:auto; } .slide-top { font-size:15px; } .slide-kicker { font-size:18px; } .slide-title { font-size:66px; } .slide-cover .slide-title { font-size:86px; } .slide-subtitle { font-size:24px; } .slide-bullets li { font-size:23px; } .slide-agenda .slide-bullets li { font-size:26px; } .slide-footer { font-size:14px; } .slide-qa .slide-title { font-size:140px; } }
+  </style>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="答辩工坊首页"><span class="brand-symbol"><i></i><i></i><i></i><i></i></span><span>答辩工坊<small>DEFENSE STUDIO</small></span></a>
+      <nav aria-label="主导航"><a href="#studio">制作台</a><a href="#how">使用方法</a></nav>
+      <a class="header-cta" href="#studio">开始制作 <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero wrap" aria-labelledby="heroTitle">
+        <div class="hero-copy"><div class="eyebrow"><span></span> 给每一次答辩，一个清晰的开场</div><h1 id="heroTitle">从一份材料，<br><em>到一场好答辩。</em></h1><p>写下你的研究方向，放入已有材料，挑选喜欢的表达风格。几步生成可以继续编辑、直接演示的网页 PPT。</p><div class="hero-actions"><a class="primary-btn" href="#studio">打开制作台 <span>↗</span></a><span>无需注册 · 内容保存在本机浏览器</span></div></div>
+        <div class="hero-visual" aria-hidden="true"><div class="hero-notecard"><span>01 / STRUCTURE</span><strong>先把思路<br>讲清楚。</strong><i></i></div><div class="hero-visual-foot"><span>IDEA → STORY → SLIDES</span><span>16:9</span></div></div>
+      </section>
+
+      <section class="studio-section" id="studio" aria-labelledby="studioTitle">
+        <div class="wrap"><div class="section-heading"><div><span class="section-label">WORKSPACE / 01</span><h2 id="studioTitle">你的答辩制作台</h2></div><p>先输入内容，再调整形式。材料不足的地方会明确提示补充，不会替你编造研究结果。</p></div>
+          <div class="studio-grid">
+            <aside class="input-panel" aria-label="答辩内容设置">
+              <div class="panel-heading"><span class="step-pill">01</span><div><h3>准备内容</h3><p>填写基本信息与已有材料</p></div></div>
+              <form id="projectForm">
+                <label for="projectTitle">答辩题目 <b>*</b></label><input id="projectTitle" name="projectTitle" placeholder="例如：校园公共空间夜间使用研究" maxlength="80" required />
+                <label for="direction">你想讲清楚的核心问题</label><textarea id="direction" name="direction" rows="2" placeholder="用一句话描述研究方向、设计目标或核心观点"></textarea>
+                <div class="field-pair"><div><label for="presenter">答辩人</label><input id="presenter" name="presenter" placeholder="你的姓名" maxlength="40" /></div><div><label for="institution">学院 / 专业</label><input id="institution" name="institution" placeholder="学院或专业" maxlength="50" /></div></div>
+                <label for="materials">答辩材料 <b>*</b></label><textarea id="materials" name="materials" rows="9" placeholder="粘贴论文摘要、设计说明或提纲。建议用“# 研究背景”“# 方法”“# 结论”这样的标题分段，每段再写 2–4 条要点。" required></textarea>
+                <div class="field-help"><span>可导入 TXT、Markdown、DOCX、文本型 PDF</span><label class="file-button" for="materialFile">导入文件 <span>↗</span></label><input id="materialFile" type="file" accept=".txt,.md,.docx,.pdf,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden /></div>
+                <fieldset class="style-field"><legend>选择演示风格</legend><div class="style-options" id="styleOptions"><label class="style-option selected" data-style="editorial"><input type="radio" name="style" value="editorial" checked /><span class="swatch editorial"><i></i></span><strong>简约学术</strong><small>清晰 / 克制</small></label><label class="style-option" data-style="ink"><input type="radio" name="style" value="ink" /><span class="swatch ink"><i></i></span><strong>东方水墨</strong><small>留白 / 沉静</small></label><label class="style-option" data-style="tech"><input type="radio" name="style" value="tech" /><span class="swatch tech"><i></i></span><strong>未来科技</strong><small>深色 / 聚焦</small></label><label class="style-option" data-style="warm"><input type="radio" name="style" value="warm" /><span class="swatch warm"><i></i></span><strong>暖调叙事</strong><small>柔和 / 亲近</small></label></div></fieldset>
+                <button class="generate-btn" type="submit">生成网页 PPT <span>→</span></button><button class="text-btn" id="loadDemo" type="button">先看一份示例 <span>↗</span></button>
+              </form>
+            </aside>
+            <div class="preview-panel" id="previewPanel">
+              <div class="preview-head"><div><span class="step-pill dark">02</span><div><h3>逐页预览</h3><p id="previewStatus">示例内容 · 可切换风格与试用编辑</p></div></div><span class="save-status" id="saveStatus">仅保存在本机</span></div>
+              <div class="preview-workspace"><div class="slide-frame" id="slideFrame"><div id="currentSlide"></div></div><p class="fit-warning" id="fitWarning" role="status" hidden>这一页内容可能超出画面。请缩短文字或拆成两页。</p><div class="slide-controls"><div class="pager"><button type="button" id="prevSlide" aria-label="上一页">←</button><span id="pageCount">01 / 01</span><button type="button" id="nextSlide" aria-label="下一页">→</button></div><button type="button" id="presentBtn" class="outline-btn">全屏演示 <span>↗</span></button></div><div class="thumb-strip" id="thumbStrip" aria-label="幻灯片列表"></div></div>
+              <div class="editor-area"><div class="editor-head"><div><span class="step-pill dark">03</span><div><h3>编辑这一页</h3><p>修改后会立即同步到预览和导出文件</p></div></div><div class="editor-tools"><button type="button" class="icon-text" id="moveUp" aria-label="当前页前移">↑ 前移</button><button type="button" class="icon-text" id="moveDown" aria-label="当前页后移">↓ 后移</button><button type="button" class="icon-text" id="addSlide">＋ 新增页</button></div></div><div class="editor-fields"><div><label for="slideKicker">页眉标签</label><input id="slideKicker" placeholder="例如：RESEARCH / 01" /></div><div><label for="slideTitle">页面标题</label><input id="slideTitle" placeholder="这一页的标题" /></div><div class="full"><label for="slideBody">正文要点 <small>每行一条</small></label><textarea id="slideBody" rows="4" placeholder="每行输入一条要点"></textarea></div></div><button type="button" class="delete-btn" id="deleteSlide">删除当前页</button></div>
+              <div class="export-bar"><div><strong>准备好上场了吗？</strong><span>HTML 可离线演示；项目备份可在另一台设备继续编辑。</span></div><div class="export-actions"><button type="button" id="backupBtn">备份项目</button><label for="restoreFile" class="export-file-label">导入备份</label><input id="restoreFile" type="file" accept=".json,application/json" hidden /><button type="button" id="printBtn">打印 / PDF</button><button type="button" id="exportBtn">导出 HTML ↗</button></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="how-section wrap" id="how"><div class="section-heading"><div><span class="section-label">A BETTER FLOW / 02</span><h2>从内容到表达，三步完成</h2></div></div><div class="how-grid"><article><span>01 / 梳理</span><h3>先给出真实材料</h3><p>粘贴论文摘要或导入文档。用标题区分章节，生成的层次会更清楚。</p></article><article><span>02 / 定调</span><h3>选择你的讲述方式</h3><p>四种视觉风格覆盖稳重学术、东方气质、科技项目与温暖叙事。</p></article><article><span>03 / 打磨</span><h3>逐页检查再上台</h3><p>编辑和调换页面，核对论据与结论，再导出离线 HTML 或备份项目。</p></article></div><div class="honesty-note"><span>※</span><p><strong>答辩质量提醒</strong> 文档导入只提取文字；扫描版 PDF 需先识别，图表和公式需人工补充。研究数据、引文与结论请核对原始资料。材料只在当前浏览器中处理与保存。</p></div></section>
+    </main>
+    <footer class="site-footer"><div class="wrap"><span>答辩工坊 <small>让观点更有条理地被看见。</small></span><a href="#top">回到顶部 ↑</a></div></footer>
+  </div>
+  <div id="printDeck" aria-hidden="true"></div><div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
