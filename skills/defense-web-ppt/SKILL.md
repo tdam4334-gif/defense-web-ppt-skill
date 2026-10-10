@@ -1,6 +1,6 @@
 ---
 name: defense-web-ppt
-description: Build or improve a Chinese university thesis or project defense website that turns a student's topic and source material into editable 16:9 browser slides. Use for web PPT creation, presentation flow, and offline HTML delivery; use a PPTX skill for native PowerPoint files.
+description: Build or improve a Chinese university thesis or project defense website that turns a student's topic and source material into editable 16:9 browser slides, with optional ChatGPT prompt handoff and JSON return. Use for web PPT creation and offline HTML delivery; use a PPTX skill for native PowerPoint files.
 ---
 
 # 答辩网页 PPT
@@ -18,8 +18,8 @@ description: Build or improve a Chinese university thesis or project defense web
 
 1. 复制 starter，替换示例题目、品牌文案、配色和页面内容。`dist/vendor/` 含本地 DOCX/PDF 文字解析器及其原许可文件；保留这些许可文件。
 2. 模板可导入 TXT、Markdown、DOCX 和文本型 PDF。Word/PDF 导入只提取文字；扫描版 PDF 需另做 OCR，图片、图表和公式需人工处理。输入在浏览器本地解析并保存在 localStorage；JSON 备份会包含材料，提醒用户妥善保管。
-3. 模板按标题和句子分段，不具备 AI 语义归纳能力。如果用户要求 AI 提纲、自动引用或事实核查，需要另行设计服务、凭证、成本和数据处理方式，不要把规则分段称为 AI 生成。
-4. 需要托管时遵循可用的 Sites 工作流。不要把现有 `.openai/hosting.json`、站点 ID、仓库凭证、用户论文或测试下载文件放进通用技能模板。改变现有站点的公开范围前，确认用户的分享意图。
+3. 模板按标题和句子分段，不具备 AI 语义归纳能力。可选的 ChatGPT 流程只复制当前页提示词，用户在自己的 ChatGPT 中修改后，将 JSON 粘贴回制作台；原始材料默认不加入提示词。提示用户核对 AI 改写结果。不要将 ChatGPT 登录称为站内模型授权，也不要声称网站自动使用访客的 ChatGPT 配额。
+4. 需要托管时遵循可用的 Sites 工作流。若要求访客登录，使用托管平台提供的服务端身份验证并保护页面；静态模板本身没有登录功能。不要把现有 `.openai/hosting.json`、站点 ID、仓库凭证、用户论文或测试下载文件放进通用技能模板。改变现有站点的公开范围前，确认用户的分享意图。
 
 ## 交付自检
 
@@ -27,4 +27,5 @@ description: Build or improve a Chinese university thesis or project defense web
 - 在桌面和手机宽度检查文字溢出、按钮可用性、键盘翻页与演示模式。
 - 验证 TXT/Markdown、DOCX、文本型 PDF 的导入；扫描 PDF 应给出明确提示。
 - 实际导出并离线打开 HTML，检查备份 JSON 可重新导入；打印 PDF 前检查分页和字体。
+- 检查 ChatGPT 提示词默认不包含原始材料，回填 JSON 只更新当前页；错误格式不能覆盖原稿。托管登录应在服务端拦截匿名访问。
 - 检查页面没有外部脚本、示例材料没有被误当作真实研究、部署地址和访问权限与用户要求一致。

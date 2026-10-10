@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "defense-studio-draft-v1";
+  const accountId = document.getElementById("authContext")?.dataset.userId;
+  const STORAGE_KEY = accountId ? `defense-studio-draft-v2:${accountId}` : "defense-studio-draft-v1";
   const $ = (id) => document.getElementById(id);
   const form = $("projectForm");
   const sampleMaterials = `# 研究背景
@@ -210,7 +211,61 @@
   }
 
   function renderAll() {
-    renderCurrent(); renderThumbnails(); renderEditor(); renderPrintDeck(); saveDraft();
+    renderCurrent(); renderThumbnails(); renderEditor(); renderPrintDeck(); refreshAiPrompt(); saveDraft();
+  }
+
+  function buildAiPrompt() {
+    const slide = state.slides[state.current];
+    const fields = formData();
+    const styleName = { editorial: "简约学术", ink: "东方水墨", tech: "未来科技", warm: "暖调叙事" }[state.style];
+    const parts = [
+      "请帮我润色一页大学答辩网页 PPT。只根据提供的内容修改表达，不要编造数据、引用、研究结果或事实。保持适合 16:9 幻灯片的简洁篇幅。",
+      `项目题目：${fields.projectTitle.trim() || state.title || "未命名答辩"}`,
+      `研究方向：${fields.direction.trim() || "未填写"}`,
+      `视觉风格：${styleName}`,
+      `当前第 ${state.current + 1} 页：${JSON.stringify({ title: slide.title, kicker: slide.kicker, body: slide.body }, null, 2)}`,
+    ];
+    if ($("includeAiMaterials").checked) {
+      const materials = fields.materials.trim();
+      parts.push(materials ? `供核对的原始材料（最多 12000 字）:\n${materials.slice(0, 12000)}${materials.length > 12000 ? "\n[材料已截断]" : ""}` : "原始材料：未填写");
+    }
+    parts.push('请只返回一个 JSON 对象，不要 Markdown 代码围栏或额外说明。格式：{"title":"页面标题","kicker":"短页眉","body":["要点一","要点二"]}。title 不超过 60 字，kicker 不超过 40 字，body 为 1 至 5 个要点，每项不超过 120 字。无依据的内容请写“待核实”。');
+    return parts.join("\n\n");
+  }
+
+  function refreshAiPrompt() {
+    $("aiPromptPreview").value = buildAiPrompt();
+  }
+
+  async function copyAiPrompt() {
+    refreshAiPrompt();
+    const prompt = $("aiPromptPreview").value;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast("提示词已复制，请在自己的 ChatGPT 中粘贴。");
+    } catch {
+      $("aiPromptPreview").focus();
+      $("aiPromptPreview").select();
+      toast("自动复制不可用。提示词已选中，请手动复制。");
+    }
+  }
+
+  function applyAiResult() {
+    let raw = $("aiResult").value.trim();
+    if (!raw) return toast("请先粘贴 ChatGPT 返回的 JSON。");
+    raw = raw.replace(/^\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60$/, "");
+    try {
+      const result = JSON.parse(raw);
+      if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error("返回内容必须是 JSON 对象。");
+      if (typeof result.title !== "string" || !result.title.trim() || result.title.length > 100) throw new Error("标题需为 1–100 字。");
+      if (typeof result.kicker !== "string" || result.kicker.length > 60) throw new Error("页眉需为 0–60 字。");
+      if (!Array.isArray(result.body) || result.body.length < 1 || result.body.length > 8 || result.body.some((line) => typeof line !== "string" || !line.trim() || line.length > 300)) throw new Error("正文需为 1–8 条，每条 1–300 字。");
+      state.slides[state.current] = { ...state.slides[state.current], title: result.title.trim(), kicker: result.kicker.trim(), body: result.body.map((line) => line.trim()) };
+      renderAll();
+      toast("已应用到当前页，请核对内容与版面。");
+    } catch (error) {
+      toast(error instanceof SyntaxError ? "JSON 格式有误，请让 ChatGPT 只返回一个 JSON 对象。" : error.message);
+    }
   }
 
   function setCurrent(index) {
@@ -315,7 +370,7 @@
     toast(`已生成 ${deck.length} 页。请逐页核对论据和结论。`);
   });
 
-  form.addEventListener("input", saveDraft);
+  form.addEventListener("input", () => { saveDraft(); refreshAiPrompt(); });
   $("materialFile").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -337,7 +392,7 @@
   $("nextSlide").addEventListener("click", () => setCurrent(state.current + 1));
   $("thumbStrip").addEventListener("click", (event) => { const button = event.target.closest(".thumb"); if (button) setCurrent(Number(button.dataset.index)); });
   for (const [id, key, transform] of [["slideKicker", "kicker", (v) => v], ["slideTitle", "title", (v) => v], ["slideBody", "body", (v) => v.split("\n").map((line) => line.trim()).filter(Boolean)]]) {
-    $(id).addEventListener("input", (event) => { state.slides[state.current][key] = transform(event.target.value); renderCurrent(); renderThumbnails(); renderPrintDeck(); saveDraft(); });
+    $(id).addEventListener("input", (event) => { state.slides[state.current][key] = transform(event.target.value); renderCurrent(); renderThumbnails(); renderPrintDeck(); refreshAiPrompt(); saveDraft(); });
   }
   $("addSlide").addEventListener("click", () => { state.slides.splice(state.current + 1, 0, { type: "content", kicker: "NEW SLIDE", title: "新的一页", body: ["在这里写下你的核心要点。"] }); setCurrent(state.current + 1); });
   $("moveUp").addEventListener("click", () => { if (state.current < 1) return; [state.slides[state.current - 1], state.slides[state.current]] = [state.slides[state.current], state.slides[state.current - 1]]; setCurrent(state.current - 1); });
@@ -364,6 +419,9 @@
   $("presentBtn").addEventListener("click", () => { const active = document.body.classList.toggle("presenting"); $("presentBtn").innerHTML = active ? "退出演示 <span>×</span>" : "全屏演示 <span>↗</span>"; });
   $("printBtn").addEventListener("click", () => { renderPrintDeck(); window.print(); });
   $("exportBtn").addEventListener("click", exportHtml);
+  $("includeAiMaterials").addEventListener("change", refreshAiPrompt);
+  $("copyAiPrompt").addEventListener("click", copyAiPrompt);
+  $("applyAiResult").addEventListener("click", applyAiResult);
   document.addEventListener("keydown", (event) => {
     if (!document.body.classList.contains("presenting")) return;
     if (event.key === "Escape") { document.body.classList.remove("presenting"); $("presentBtn").innerHTML = "全屏演示 <span>↗</span>"; }
